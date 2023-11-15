@@ -23,25 +23,19 @@ const client = new SESClient({ region: "eu-west-1" });
 
 export const handler: SQSHandler = async (event: any) => {
   try {
-    const { name, email, message } = {
+    const { name, email, message } : ContactDetails = {
       name: "The Photo Album",
       email: SES_EMAIL_FROM,
       message: "We received your Image. Thanks",
     };
-
-    return await sendEmail({ name, email, message });
+    const params = sendEmailParams({ name, email, message });
+    await client.send(new SendEmailCommand(params));
+    return 
   } catch (error: unknown) {
     console.log("ERROR is: ", error);
     return;
   }
 };
-
-async function sendEmail({ name, email, message }: ContactDetails) {
-  console.log("before send");
-  const params = sendEmailParams({ name, email, message });
-  await client.send(new SendEmailCommand(params));
-  return;
-}
 
 function sendEmailParams({ name, email, message }: ContactDetails) {
   const parameters: SendEmailCommandInput = {
@@ -54,20 +48,18 @@ function sendEmailParams({ name, email, message }: ContactDetails) {
           Charset: "UTF-8",
           Data: getHtmlContent({ name, email, message }),
         },
-        Text: {
-          Charset: "UTF-8",
-          Data: getTextContent({ name, email, message }),
-        },
+        // Text: {
+        //   Charset: "UTF-8",
+        //   Data: getTextContent({ name, email, message }),
+        // },
       },
       Subject: {
         Charset: "UTF-8",
-        Data: `Email from example ses app.`,
+        Data: `New image Upload`,
       },
     },
     Source: SES_EMAIL_FROM,
   };
-  console.log("after params");
-
   return parameters;
 }
 
@@ -75,7 +67,6 @@ function getHtmlContent({ name, email, message }: ContactDetails) {
   return `
     <html>
       <body>
-        <h1>Received an Email. 📬</h1>
         <h2>Sent from: </h2>
         <ul>
           <li style="font-size:18px">👤 <b>${name}</b></li>
